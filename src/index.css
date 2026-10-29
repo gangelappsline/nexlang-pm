@@ -1,0 +1,21 @@
+@import "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap";
+@import "tailwindcss";
+
+body {
+	font-family: "Plus Jakarta Sans", "Manrope", sans-serif;
+}
+
+@keyframes slideIn {
+	from {
+		transform: translateX(100%);
+		opacity: 0;
+	}
+	to {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+.animate-slideIn {
+	animation: slideIn 0.3s ease-out;
+}
