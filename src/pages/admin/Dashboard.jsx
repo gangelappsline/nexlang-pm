@@ -1,390 +1,540 @@
+import { createElement, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  FiCalendar, 
-  FiCheckCircle, 
-  FiClock, 
-  FiFolder,
-  FiUsers,
-  FiAlertCircle,
-  FiActivity,
-  FiTrendingUp,
+import {
+  FiArrowUpRight,
   FiArrowRight,
-  FiTarget,
-  FiBarChart2
+  FiCalendar,
+  FiCheck,
+  FiCheckCircle,
+  FiChevronLeft,
+  FiChevronRight,
+  FiClock,
+  FiFolder,
+  FiFlag,
+  FiRefreshCw,
+  FiSliders,
+  FiX,
+  FiMoreHorizontal,
+  FiLayers,
 } from 'react-icons/fi';
 import Header from '../../components/Header';
 import AdminLayout from '../../components/AdminLayout';
 import { useProject } from '../../contexts/ProjectContext';
 import { getTasks } from '../../api/tasks';
+import { getAuthUser } from '../../utils/auth-storage';
+import {
+  addDays,
+  calendarDays,
+  dateKey,
+  parseTaskDate,
+  taskStatusLabel,
+} from '../../utils/calendar';
+
+const shortDate = (date) => date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+const isFinished = (task) => ['completed', 'cancelled', 'rejected'].includes(task.status);
+
+const TaskCard = ({ task, onClick, compact = false }) => {
+  const assignees = task.users || task.assignees || [];
+  const people = Array.isArray(assignees) ? assignees : [];
+  const tone =
+    task.status === 'completed'
+      ? 'complete'
+      : task.priority?.toLowerCase() === 'high'
+        ? 'priority'
+        : task.status === 'in_progress'
+          ? 'progress'
+          : 'pending';
+  return (
+    <button
+      className={`agenda-task task-${tone} ${compact ? 'is-compact' : ''}`}
+      onClick={() => onClick(task)}
+    >
+      <span className="task-card-top">
+        <span className="task-type-icon">
+          {task.status === 'completed' ? (
+            <FiCheck />
+          ) : task.priority?.toLowerCase() === 'high' ? (
+            <FiFlag />
+          ) : (
+            <FiLayers />
+          )}
+        </span>
+        <FiMoreHorizontal />
+      </span>
+      <strong>{task.title}</strong>
+      {!compact && (
+        <>
+          {task.description && <p>{task.description}</p>}
+          <span className="task-status">
+            <span />
+            {taskStatusLabel(task.status)}
+          </span>
+          <span className="task-card-footer">
+            <span>
+              <FiClock size={11} />
+              {task.estimated_hours ? `${task.estimated_hours} h estimadas` : 'Ver detalles'}
+            </span>
+            <span className="task-avatars">
+              {people.slice(0, 3).map((person, i) => (
+                <span key={person.id || i} title={person.name}>
+                  {(person.name || person.email || 'U').slice(0, 2).toUpperCase()}
+                </span>
+              ))}
+              {people.length > 3 && <span>+{people.length - 3}</span>}
+            </span>
+          </span>
+        </>
+      )}
+    </button>
+  );
+};
+
+const TaskPreview = ({ task, onClose, onOpenTasks }) => {
+  const ref = useRef(null);
+  useEffect(() => {
+    const dialog = ref.current;
+    dialog.showModal();
+    return () => dialog.close();
+  }, []);
+  return (
+    <dialog
+      className="task-preview"
+      ref={ref}
+      onCancel={onClose}
+      onClick={(e) => {
+        if (e.target === ref.current) onClose();
+      }}
+      aria-labelledby="task-preview-title"
+    >
+      <div className="preview-top">
+        <span className="eyebrow">DETALLE DE TAREA</span>
+        <button className="icon-button" onClick={onClose} aria-label="Cerrar detalle">
+          <FiX />
+        </button>
+      </div>
+      <h2 id="task-preview-title">{task.title}</h2>
+      <span className="preview-status">{taskStatusLabel(task.status)}</span>
+      <p className="preview-description">
+        {task.description || 'Esta tarea aún no tiene una descripción.'}
+      </p>
+      <dl>
+        <div>
+          <dt>Fecha de entrega</dt>
+          <dd>
+            {parseTaskDate(task.due_date)?.toLocaleDateString('es-MX', { dateStyle: 'long' }) ||
+              'Sin fecha'}
+          </dd>
+        </div>
+        <div>
+          <dt>Prioridad</dt>
+          <dd>
+            {{ high: 'Alta', medium: 'Media', low: 'Baja' }[task.priority?.toLowerCase()] ||
+              'Sin prioridad'}
+          </dd>
+        </div>
+      </dl>
+      <button className="primary-button" onClick={onOpenTasks}>
+        Gestionar en tareas <FiArrowUpRight />
+      </button>
+    </dialog>
+  );
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { selectedProject } = useProject();
+  const {
+    selectedProject,
+    isLoading: projectsLoading,
+    error: projectsError,
+    refreshProjects,
+  } = useProject();
+  const [today] = useState(() => new Date());
+  const [cursor, setCursor] = useState(() => new Date());
+  const [view, setView] = useState('week');
+  const [status, setStatus] = useState('all');
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [user] = useState(getAuthUser);
 
-  // Fetch tasks for the selected project
-  const { data: tasksResponse, isLoading: tasksLoading } = useQuery({
+  // Keep the existing endpoint, query key and fetch behavior.
+  const {
+    data: tasksResponse,
+    isLoading: tasksLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ['tasks', selectedProject?.id],
     queryFn: () => getTasks(selectedProject.id),
     enabled: !!selectedProject?.id,
     staleTime: 5000,
   });
-
   const tasks = tasksResponse?.data || [];
-
-  // Calculate comprehensive statistics
-  const stats = {
-    totalTasks: tasks.length,
-    completedTasks: tasks.filter(t => t.status === 'completed').length,
-    inProgressTasks: tasks.filter(t => t.status === 'in_progress').length,
-    pendingTasks: tasks.filter(t => t.status === 'pending').length,
-    rejectedTasks: tasks.filter(t => t.status === 'rejected').length,
-    cancelledTasks: tasks.filter(t => t.status === 'cancelled').length,
-    highPriorityTasks: tasks.filter(t => t.priority?.toLowerCase() === 'high').length,
-    overdueTasks: tasks.filter(t => {
-      if (!t.due_date) return false;
-      return new Date(t.due_date) < new Date() && t.status !== 'completed';
-    }).length,
-    dueSoonTasks: tasks.filter(t => {
-      if (!t.due_date || t.status === 'completed') return false;
-      const daysUntilDue = Math.ceil((new Date(t.due_date) - new Date()) / (1000 * 60 * 60 * 24));
-      return daysUntilDue > 0 && daysUntilDue <= 7;
-    }).length,
-    totalEstimatedHours: tasks.reduce((sum, t) => sum + (t.estimated_hours || 0), 0),
-  };
-
-  const completionRate = stats.totalTasks > 0 
-    ? Math.round((stats.completedTasks / stats.totalTasks) * 100) 
-    : 0;
-
-  // Get urgent tasks (overdue or due soon with high priority)
-  const urgentTasks = tasks
-    .filter(t => {
-      if (t.status === 'completed') return false;
-      const isOverdue = t.due_date && new Date(t.due_date) < new Date();
-      const isDueSoon = t.due_date && Math.ceil((new Date(t.due_date) - new Date()) / (1000 * 60 * 60 * 24)) <= 3;
-      const isHighPriority = t.priority?.toLowerCase() === 'high';
-      return isOverdue || (isDueSoon && isHighPriority);
-    })
-    .sort((a, b) => new Date(a.due_date || 0) - new Date(b.due_date || 0))
-    .slice(0, 5);
-
-  // Get recent activity
-  const recentActivity = [...tasks]
-    .filter(t => t.updated_at || t.created_at)
-    .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at))
-    .slice(0, 8);
-
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: 'bg-slate-100 text-slate-700 border-slate-200',
-      in_progress: 'bg-blue-100 text-blue-700 border-blue-200',
-      rejected: 'bg-red-100 text-red-700 border-red-200',
-      cancelled: 'bg-orange-100 text-orange-700 border-orange-200',
-      completed: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-    };
-    return colors[status] || colors.pending;
-  };
-
-  const getStatusName = (status) => {
-    const names = {
-      pending: 'Pending',
-      in_progress: 'In Progress',
-      rejected: 'Rejected',
-      cancelled: 'Cancelled',
-      completed: 'Completed',
-    };
-    return names[status] || status;
-  };
-
-  const getPriorityColor = (priority) => {
-    const colors = {
-      high: 'text-red-600 bg-red-50 border-red-200',
-      medium: 'text-amber-600 bg-amber-50 border-amber-200',
-      low: 'text-emerald-600 bg-emerald-50 border-emerald-200',
-    };
-    return colors[priority?.toLowerCase()] || colors.low;
-  };
-
-  const getDaysUntilDue = (dueDate) => {
-    if (!dueDate) return null;
-    const days = Math.ceil((new Date(dueDate) - new Date()) / (1000 * 60 * 60 * 24));
-    return days;
-  };
-
-  const formatDaysUntilDue = (days) => {
-    if (days === null) return 'No due date';
-    if (days < 0) return `${Math.abs(days)} days overdue`;
-    if (days === 0) return 'Due today';
-    if (days === 1) return 'Due tomorrow';
-    return `Due in ${days} days`;
-  };
-
-  if (!selectedProject) {
+  const completed = tasks.filter((t) => t.status === 'completed').length;
+  const progress = tasks.filter((t) => t.status === 'in_progress').length;
+  const overdue = tasks.filter(
+    (t) =>
+      !isFinished(t) &&
+      parseTaskDate(t.due_date) &&
+      dateKey(parseTaskDate(t.due_date)) < dateKey(today)
+  ).length;
+  const completionRate = tasks.length ? Math.round((completed / tasks.length) * 100) : 0;
+  const days = calendarDays(cursor, view);
+  const filteredTasks = tasks.filter((task) => status === 'all' || task.status === status);
+  const unscheduled = filteredTasks.filter((task) => !parseTaskDate(task.due_date));
+  const visibleTasks = filteredTasks.filter((task) => {
+    const date = parseTaskDate(task.due_date);
     return (
-      <AdminLayout>
-        <Header activeNav="Dashboard" />
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <FiFolder className="mx-auto h-16 w-16 text-slate-300" />
-            <h3 className="mt-4 text-xl font-semibold text-slate-900">No Project Selected</h3>
-            <p className="mt-2 text-sm text-slate-500">Please select a project from the header to view the dashboard.</p>
-          </div>
-        </div>
-      </AdminLayout>
+      date && dateKey(date) >= dateKey(days[0]) && dateKey(date) <= dateKey(days[days.length - 1])
     );
-  }
+  });
+  const taskPath = `/admin/projects/${encodeURIComponent(selectedProject?.name?.toLowerCase().replace(/\s+/g, '-') || 'nexlang')}/tasks`;
+  const openTasks = () => navigate(taskPath);
+  const shift = (direction) =>
+    setCursor((current) =>
+      view === 'month'
+        ? new Date(current.getFullYear(), current.getMonth() + direction, 1)
+        : addDays(current, direction * 7)
+    );
+  const loading = projectsLoading || tasksLoading;
+  const rangeLabel =
+    view === 'month'
+      ? cursor.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })
+      : `${shortDate(days[0])} — ${shortDate(days[6])}, ${days[6].getFullYear()}`;
 
   return (
     <AdminLayout>
       <Header activeNav="Dashboard" />
-      
-      <div className="space-y-6 p-12">
-
-        {/* Key Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Total Tasks */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-blue-100 rounded-xl">
-                <FiFolder className="text-blue-600" size={24} />
-              </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold text-slate-900">{stats.totalTasks}</div>
-                <div className="text-xs text-slate-500 mt-1">{stats.totalEstimatedHours}h estimated</div>
-              </div>
+      <main className="dashboard-content">
+        <section className="dashboard-heading">
+          <div>
+            <div className="eyebrow">
+              <span /> TU DÍA, CON MÁS CLARIDAD
             </div>
-            <h3 className="text-sm font-semibold text-slate-600">Total Tasks</h3>
+            <h1>
+              Todo listo para avanzar{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
+              <span className="heading-dot">.</span>
+            </h1>
+            <p>Menos pendientes, más progreso. Dale espacio a lo importante.</p>
           </div>
+          <button
+            className="primary-button"
+            onClick={() => (selectedProject ? openTasks() : navigate('/admin/projects'))}
+          >
+            {selectedProject ? 'Ir a mis tareas' : 'Crear proyecto'}
+            <FiArrowUpRight size={17} />
+          </button>
+        </section>
 
-          {/* Completed Tasks */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-emerald-100 rounded-xl">
-                <FiCheckCircle className="text-emerald-600" size={24} />
+        <section
+          className="dashboard-metrics"
+          aria-label="Resumen del proyecto"
+          aria-busy={loading}
+        >
+          {[
+            {
+              label: 'Tareas del proyecto',
+              value: tasks.length,
+              icon: FiFolder,
+              detail: selectedProject?.name || 'Tu espacio de trabajo',
+              className: 'metric-total',
+            },
+            {
+              label: 'En progreso',
+              value: progress,
+              icon: FiClock,
+              detail: 'Ideas en movimiento',
+              className: 'metric-progress',
+            },
+            {
+              label: 'Completadas',
+              value: completed,
+              icon: FiCheckCircle,
+              detail: `${completionRate}% del proyecto`,
+              className: 'metric-complete',
+            },
+            {
+              label: 'Fuera de plazo',
+              value: overdue,
+              icon: FiFlag,
+              detail: overdue ? 'Necesitan tu atención' : 'Todo bajo control',
+              className: 'metric-overdue',
+            },
+          ].map(({ label, value, icon: Icon, detail, className }) => (
+            <article className={`metric-card ${className}`} key={label}>
+              <div className="metric-label">
+                {label}
+                {createElement(Icon, { size: 17 })}
               </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold text-slate-900">{stats.completedTasks}</div>
-                <div className="text-xs text-emerald-600 mt-1 font-semibold">{completionRate}% complete</div>
+              <div className="metric-value">
+                {loading ? (
+                  <span className="metric-skeleton" />
+                ) : error || projectsError ? (
+                  '—'
+                ) : (
+                  String(value).padStart(2, '0')
+                )}
+                <span className="metric-decoration" />
               </div>
-            </div>
-            <h3 className="text-sm font-semibold text-slate-600">Completed</h3>
-          </div>
-
-          {/* In Progress */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-amber-100 rounded-xl">
-                <FiActivity className="text-amber-600" size={24} />
-              </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold text-slate-900">{stats.inProgressTasks}</div>
-                <div className="text-xs text-slate-500 mt-1">{stats.pendingTasks} pending</div>
-              </div>
-            </div>
-            <h3 className="text-sm font-semibold text-slate-600">In Progress</h3>
-          </div>
-
-          {/* Critical Tasks */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-red-100 rounded-xl">
-                <FiAlertCircle className="text-red-600" size={24} />
-              </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold text-slate-900">{stats.overdueTasks}</div>
-                <div className="text-xs text-red-600 mt-1 font-semibold">{stats.dueSoonTasks} due soon</div>
-              </div>
-            </div>
-            <h3 className="text-sm font-semibold text-slate-600">Overdue</h3>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Task Distribution */}
-          <div className="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <FiBarChart2 className="text-blue-600" size={20} />
-              <h2 className="text-lg font-bold text-slate-900">Task Distribution</h2>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-slate-700">Completed</span>
-                  <span className="text-sm font-bold text-slate-900">{stats.completedTasks}</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
-                  <div 
-                    className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${stats.totalTasks > 0 ? (stats.completedTasks / stats.totalTasks) * 100 : 0}%` }}
-                  ></div>
-                </div>
-              </div>
-              
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-slate-700">In Progress</span>
-                  <span className="text-sm font-bold text-slate-900">{stats.inProgressTasks}</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
-                  <div 
-                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${stats.totalTasks > 0 ? (stats.inProgressTasks / stats.totalTasks) * 100 : 0}%` }}
-                  ></div>
-                </div>
-              </div>
-              
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-slate-700">Pending</span>
-                  <span className="text-sm font-bold text-slate-900">{stats.pendingTasks}</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
-                  <div 
-                    className="bg-slate-400 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${stats.totalTasks > 0 ? (stats.pendingTasks / stats.totalTasks) * 100 : 0}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              {stats.overdueTasks > 0 && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-slate-700">Overdue</span>
-                    <span className="text-sm font-bold text-slate-900">{stats.overdueTasks}</span>
+              <div className="metric-detail">
+                {detail}
+                {label === 'Completadas' && (
+                  <div className="metric-track">
+                    <span style={{ width: `${completionRate}%` }} />
                   </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2">
-                    <div 
-                      className="bg-red-500 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${stats.totalTasks > 0 ? (stats.overdueTasks / stats.totalTasks) * 100 : 0}%` }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            </article>
+          ))}
+        </section>
 
-            {/* Priority Breakdown */}
-            <div className="mt-6 pt-6 border-t border-slate-200">
-              <h3 className="text-sm font-semibold text-slate-700 mb-3">Priority Breakdown</h3>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600">High Priority</span>
-                  <span className="text-sm font-bold text-red-600">{stats.highPriorityTasks}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600">Due This Week</span>
-                  <span className="text-sm font-bold text-amber-600">{stats.dueSoonTasks}</span>
-                </div>
+        <section className="agenda-section" aria-label="Agenda de tareas">
+          <div className="agenda-heading">
+            <div>
+              <h2>
+                Tu agenda de trabajo <span>{visibleTasks.length}</span>
+              </h2>
+              <p>Un paso a la vez, un proyecto más cerca.</p>
+            </div>
+            <div className="agenda-heading-actions">
+              <span className="agenda-project-name">
+                <span />
+                {selectedProject?.name || 'Sin proyecto'}
+              </span>
+              <button
+                className={`icon-button ${isFetching ? 'is-refreshing' : ''}`}
+                title="Actualizar tareas"
+                aria-label="Actualizar tareas"
+                disabled={isFetching || !selectedProject}
+                onClick={() => refetch()}
+              >
+                <FiRefreshCw size={16} />
+              </button>
+            </div>
+          </div>
+          <div className="agenda-toolbar">
+            <div className="calendar-navigation">
+              <span className="calendar-symbol">
+                <FiCalendar size={15} />
+              </span>
+              <strong aria-live="polite">{rangeLabel}</strong>
+              <button
+                className="icon-button"
+                aria-label="Periodo anterior"
+                onClick={() => shift(-1)}
+              >
+                <FiChevronLeft />
+              </button>
+              <button
+                className="icon-button"
+                aria-label="Periodo siguiente"
+                onClick={() => shift(1)}
+              >
+                <FiChevronRight />
+              </button>
+            </div>
+            <div className="calendar-tools">
+              <label className="status-filter">
+                <FiSliders size={13} />
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  aria-label="Filtrar tareas por estado"
+                >
+                  <option value="all">Todos los estados</option>
+                  <option value="pending">Pendientes</option>
+                  <option value="in_progress">En progreso</option>
+                  <option value="completed">Completadas</option>
+                  <option value="cancelled">Canceladas</option>
+                  <option value="rejected">Rechazadas</option>
+                </select>
+              </label>
+              <button className="today-button" onClick={() => setCursor(new Date())}>
+                Hoy
+              </button>
+              <div className="view-toggle" aria-label="Vista de calendario">
+                {[
+                  ['week', 'Semana'],
+                  ['month', 'Mes'],
+                ].map(([id, label]) => (
+                  <button
+                    key={id}
+                    aria-pressed={view === id}
+                    className={view === id ? 'is-active' : ''}
+                    onClick={() => setView(id)}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Urgent Tasks & Recent Activity */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Urgent Tasks */}
-            {urgentTasks.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <FiAlertCircle className="text-red-600" size={20} />
-                    <h2 className="text-lg font-bold text-slate-900">Urgent Tasks</h2>
+          {loading ? (
+            <div className="agenda-loading" role="status">
+              <div className="calendar-skeleton">
+                {Array.from({ length: 7 }, (_, i) => (
+                  <div key={i}>
+                    <span />
+                    <span />
+                    <span />
                   </div>
-                  <span className="inline-block rounded-full px-3 py-1 text-xs font-bold bg-red-100 text-red-700">
-                    {urgentTasks.length}
-                  </span>
-                </div>
-
-                <div className="space-y-3">
-                  {urgentTasks.map((task) => {
-                    const days = getDaysUntilDue(task.due_date);
-                    const isOverdue = days !== null && days < 0;
-                    
+                ))}
+              </div>
+              <p>Organizando tu espacio de trabajo…</p>
+            </div>
+          ) : error || projectsError ? (
+            <div className="agenda-empty" role="alert">
+              <FiRefreshCw />
+              <h3>No pudimos cargar tu espacio</h3>
+              <p>Tu información sigue a salvo. Intenta actualizar de nuevo.</p>
+              <button
+                className="secondary-button"
+                onClick={() => (projectsError ? refreshProjects() : refetch())}
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : !selectedProject ? (
+            <div className="agenda-empty">
+              <FiFolder />
+              <h3>Todo empieza con un proyecto</h3>
+              <p>Crea o selecciona un proyecto para organizar tus próximas tareas.</p>
+              <button className="primary-button" onClick={() => navigate('/admin/projects')}>
+                Explorar proyectos <FiArrowUpRight />
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="calendar-scroll">
+                <div className={`agenda-calendar ${view === 'month' ? 'month-view' : ''}`}>
+                  {view === 'month' &&
+                    ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day) => (
+                      <div className="month-weekday" key={day}>
+                        {day}
+                      </div>
+                    ))}
+                  {days.map((day) => {
+                    const key = dateKey(day);
+                    const dayTasks = filteredTasks.filter((task) => {
+                      const date = parseTaskDate(task.due_date);
+                      return date && dateKey(date) === key;
+                    });
+                    const isToday = key === dateKey(today);
                     return (
                       <div
-                        key={task.id}
-                        className="group flex items-start gap-4 p-4 rounded-lg border-2 border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all cursor-pointer"
-                        onClick={() => navigate(`/admin/projects/${selectedProject.name.toLowerCase().replace(/\s+/g, '-')}/tasks`)}
+                        className={`calendar-day ${isToday ? 'is-today' : ''} ${day.getDay() === 0 || day.getDay() === 6 ? 'is-weekend' : ''} ${view === 'month' && day.getMonth() !== cursor.getMonth() ? 'other-month' : ''}`}
+                        key={key}
                       >
-                        <div className={`p-2 rounded-lg ${isOverdue ? 'bg-red-100' : 'bg-amber-100'}`}>
-                          {isOverdue ? (
-                            <FiAlertCircle className="text-red-600" size={18} />
-                          ) : (
-                            <FiClock className="text-amber-600" size={18} />
+                        <div className="calendar-day-header">
+                          <span>
+                            {day.toLocaleDateString('es-MX', { weekday: 'short' }).replace('.', '')}
+                          </span>
+                          <strong>
+                            {String(day.getDate()).padStart(2, '0')}
+                            <small>
+                              {isToday
+                                ? 'HOY'
+                                : day
+                                    .toLocaleDateString('es-MX', { month: 'short' })
+                                    .replace('.', '')}
+                            </small>
+                          </strong>
+                          {dayTasks.length > 0 && <i>{dayTasks.length}</i>}
+                        </div>
+                        <div className="calendar-day-tasks">
+                          {dayTasks.map((task) => (
+                            <TaskCard
+                              key={task.id}
+                              task={task}
+                              compact={view === 'month'}
+                              onClick={setSelectedTask}
+                            />
+                          ))}
+                          {!dayTasks.length && (
+                            <div className="day-empty">
+                              <span />
+                              {view === 'week' && <small>Sin entregas</small>}
+                            </div>
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">
-                            {task.title}
-                          </h3>
-                          <div className="flex items-center gap-3 text-xs">
-                            <span className={`font-semibold ${isOverdue ? 'text-red-600' : 'text-amber-600'}`}>
-                              {formatDaysUntilDue(days)}
-                            </span>
-                            {task.priority && (
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getPriorityColor(task.priority)}`}>
-                                {task.priority.toUpperCase()}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <FiArrowRight className="text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" size={18} />
                       </div>
                     );
                   })}
                 </div>
               </div>
-            )}
-
-            {/* Recent Activity */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <FiActivity className="text-blue-600" size={20} />
-                <h2 className="text-lg font-bold text-slate-900">Recent Activity</h2>
+              <div className="agenda-footer">
+                <div className="calendar-legend">
+                  <span>
+                    <i className="legend-pending" />
+                    Pendiente
+                  </span>
+                  <span>
+                    <i className="legend-progress" />
+                    En progreso
+                  </span>
+                  <span>
+                    <i className="legend-priority" />
+                    Alta prioridad
+                  </span>
+                  <span>
+                    <i className="legend-complete" />
+                    Completada
+                  </span>
+                </div>
+                <span>Las tareas se muestran por fecha de entrega</span>
               </div>
-
-              {tasksLoading ? (
-                <div className="text-center py-8">
-                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-                  <p className="mt-2 text-sm text-slate-500">Loading activity...</p>
-                </div>
-              ) : recentActivity.length === 0 ? (
-                <div className="text-center py-8">
-                  <FiFolder className="mx-auto h-12 w-12 text-slate-200" />
-                  <p className="mt-2 text-sm text-slate-500">No activity yet</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {recentActivity.map((task) => (
-                    <div
-                      key={task.id}
-                      className="group flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
-                      onClick={() => navigate(`/admin/projects/${selectedProject.name.toLowerCase().replace(/\s+/g, '-')}/tasks`)}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-slate-900 text-sm truncate group-hover:text-blue-600 transition-colors">
-                          {task.title}
-                        </h3>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          Updated {new Date(task.updated_at || task.created_at).toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
-                      <span className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-semibold border ${getStatusColor(task.status)}`}>
-                        {getStatusName(task.status)}
-                      </span>
-                    </div>
-                  ))}
+              {visibleTasks.length === 0 && (
+                <div className="week-empty-note">
+                  <FiCalendar size={15} />
+                  <span>
+                    {tasks.length
+                      ? 'No hay entregas para este periodo y filtro.'
+                      : 'Tu agenda está lista. Agrega la primera tarea desde Mis tareas.'}
+                  </span>
+                  <button onClick={openTasks}>
+                    Ver tareas <FiArrowRight />
+                  </button>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-      </div>
+              {unscheduled.length > 0 && (
+                <section className="unscheduled-section">
+                  <h3>
+                    <FiClock size={15} />
+                    Sin fecha de entrega <span>{unscheduled.length}</span>
+                  </h3>
+                  <div>
+                    {unscheduled.map((task) => (
+                      <button key={task.id} onClick={() => setSelectedTask(task)}>
+                        <span />
+                        {task.title}
+                        <FiArrowUpRight />
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </>
+          )}
+        </section>
+        <footer className="dashboard-footer">
+          <span>
+            <span className="footer-spark">✳</span> Un espacio para enfocarte. Un equipo para llegar
+            más lejos.
+          </span>
+          <strong>
+            NexLang <span>Workspace</span>
+          </strong>
+        </footer>
+      </main>
+      {selectedTask && (
+        <TaskPreview
+          key={selectedTask.id}
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
+          onOpenTasks={openTasks}
+        />
+      )}
     </AdminLayout>
   );
 };

@@ -27,6 +27,7 @@ import TaskBoardView from '../../components/tasks/TaskBoardView';
 import TaskTimelineView from '../../components/tasks/TaskTimelineView';
 import TaskDetailPanel from '../../components/tasks/TaskDetailPanel';
 import Header from '../../components/Header';
+import AdminLayout from '../../components/AdminLayout';
 import { BiEraser } from 'react-icons/bi';
 
 const ProjectTasks = () => {
@@ -361,22 +362,25 @@ const ProjectTasks = () => {
   // If no project selected, redirect
   if (!selectedProject) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="text-slate-600 mb-4">No project selected</p>
-          <button
-            onClick={() => navigate('/admin')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Go to Projects
-          </button>
+      <AdminLayout>
+        <Header activeNav="Projects" />
+        <div className="flex flex-1 items-center justify-center">
+          <div className="text-center">
+            <p className="text-slate-600 mb-4">No project selected</p>
+            <button
+              onClick={() => navigate('/admin')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Go to Projects
+            </button>
+          </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-slate-50">
+    <AdminLayout>
       <Header />
       
       <div className="flex flex-1 overflow-hidden">
@@ -414,7 +418,7 @@ const ProjectTasks = () => {
           </div>
 
           {/* View Tabs */}
-          <div className="flex flex-row justify-between shrink-0 border-b border-slate-200 bg-white">
+          <div className="task-workspace-toolbar flex flex-wrap justify-between shrink-0 border-b border-slate-200 bg-white">
             <div className='flex items-center gap-0 px-4 md:px-6 overflow-x-auto'>
               {[
               { id: 'list', icon: FiList, label: 'List View', shortLabel: 'List' },
@@ -441,7 +445,7 @@ const ProjectTasks = () => {
             </div>
             
             {/* Filters Section - Desktop */}
-            <div className='hidden xl:flex items-center gap-3 py-2 px-6'>
+            <div className='hidden xl:flex flex-wrap items-center gap-3 py-2 px-6'>
               {/* User Filter */}
               <div className="flex items-center gap-2">
                 <FiUser className="text-slate-400" size={16} />
@@ -775,7 +779,7 @@ const ProjectTasks = () => {
           users={users}
         />
       )}
-    </div>
+    </AdminLayout>
   );
 };
 
