@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import { useProject } from '../../contexts/ProjectContext';
 import { useResources } from '../../hooks/useResources';
 import Header from '../../components/Header';
+import AdminLayout from '../../components/AdminLayout';
 import Breadcrumbs from '../../components/resources/Breadcrumbs';
 import FolderCard from '../../components/resources/FolderCard';
 import FileCard from '../../components/resources/FileCard';
@@ -240,22 +241,25 @@ const Resources = () => {
   // If no project selected, redirect
   if (!selectedProject) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="text-slate-600 mb-4">No project selected</p>
-          <button
-            onClick={() => navigate('/admin/dashboard')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Go to Dashboard
-          </button>
+      <AdminLayout>
+        <Header activeNav="Resources" />
+        <div className="flex flex-1 items-center justify-center">
+          <div className="text-center">
+            <p className="text-slate-600 mb-4">No project selected</p>
+            <button
+              onClick={() => navigate('/admin/dashboard')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Go to Dashboard
+            </button>
+          </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-slate-50">
+    <AdminLayout>
       <Header activeNav="Resources" />
 
       <div className="flex flex-1 overflow-hidden">
@@ -441,7 +445,7 @@ const Resources = () => {
       )}
 
       {renderEditor()}
-    </div>
+    </AdminLayout>
   );
 };
 
