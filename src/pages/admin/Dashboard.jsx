@@ -31,7 +31,7 @@ import {
   taskStatusLabel,
 } from '../../utils/calendar';
 
-const shortDate = (date) => date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+const shortDate = (date) => date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 const isFinished = (task) => ['completed', 'cancelled', 'rejected'].includes(task.status);
 
 const TaskCard = ({ task, onClick, compact = false }) => {
@@ -73,7 +73,7 @@ const TaskCard = ({ task, onClick, compact = false }) => {
           <span className="task-card-footer">
             <span>
               <FiClock size={11} />
-              {task.estimated_hours ? `${task.estimated_hours} h estimadas` : 'Ver detalles'}
+              {task.estimated_hours ? `${task.estimated_hours} h estimated` : 'View details'}
             </span>
             <span className="task-avatars">
               {people.slice(0, 3).map((person, i) => (
@@ -108,34 +108,34 @@ const TaskPreview = ({ task, onClose, onOpenTasks }) => {
       aria-labelledby="task-preview-title"
     >
       <div className="preview-top">
-        <span className="eyebrow">DETALLE DE TAREA</span>
-        <button className="icon-button" onClick={onClose} aria-label="Cerrar detalle">
+        <span className="eyebrow">TASK DETAILS</span>
+        <button className="icon-button" onClick={onClose} aria-label="Close task details">
           <FiX />
         </button>
       </div>
       <h2 id="task-preview-title">{task.title}</h2>
       <span className="preview-status">{taskStatusLabel(task.status)}</span>
       <p className="preview-description">
-        {task.description || 'Esta tarea aún no tiene una descripción.'}
+        {task.description || 'This task does not have a description yet.'}
       </p>
       <dl>
         <div>
-          <dt>Fecha de entrega</dt>
+          <dt>Due date</dt>
           <dd>
-            {parseTaskDate(task.due_date)?.toLocaleDateString('es-MX', { dateStyle: 'long' }) ||
-              'Sin fecha'}
+            {parseTaskDate(task.due_date)?.toLocaleDateString('en-US', { dateStyle: 'long' }) ||
+              'No due date'}
           </dd>
         </div>
         <div>
-          <dt>Prioridad</dt>
+          <dt>Priority</dt>
           <dd>
-            {{ high: 'Alta', medium: 'Media', low: 'Baja' }[task.priority?.toLowerCase()] ||
-              'Sin prioridad'}
+            {{ high: 'High', medium: 'Medium', low: 'Low' }[task.priority?.toLowerCase()] ||
+              'No priority'}
           </dd>
         </div>
       </dl>
       <button className="primary-button" onClick={onOpenTasks}>
-        Gestionar en tareas <FiArrowUpRight />
+        Manage in tasks <FiArrowUpRight />
       </button>
     </dialog>
   );
@@ -199,7 +199,7 @@ const Dashboard = () => {
   const loading = projectsLoading || tasksLoading;
   const rangeLabel =
     view === 'month'
-      ? cursor.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })
+      ? cursor.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
       : `${shortDate(days[0])} — ${shortDate(days[6])}, ${days[6].getFullYear()}`;
 
   return (
@@ -209,55 +209,55 @@ const Dashboard = () => {
         <section className="dashboard-heading">
           <div>
             <div className="eyebrow">
-              <span /> TU DÍA, CON MÁS CLARIDAD
+              <span /> YOUR DAY, WITH MORE CLARITY
             </div>
             <h1>
-              Todo listo para avanzar{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
+              Ready to move forward{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
               <span className="heading-dot">.</span>
             </h1>
-            <p>Menos pendientes, más progreso. Dale espacio a lo importante.</p>
+            <p>Fewer to-dos, more progress. Make room for what matters.</p>
           </div>
           <button
             className="primary-button"
             onClick={() => (selectedProject ? openTasks() : navigate('/admin/projects'))}
           >
-            {selectedProject ? 'Ir a mis tareas' : 'Crear proyecto'}
+            {selectedProject ? 'Go to my tasks' : 'Create project'}
             <FiArrowUpRight size={17} />
           </button>
         </section>
 
         <section
           className="dashboard-metrics"
-          aria-label="Resumen del proyecto"
+          aria-label="Project overview"
           aria-busy={loading}
         >
           {[
             {
-              label: 'Tareas del proyecto',
+              label: 'Project tasks',
               value: tasks.length,
               icon: FiFolder,
-              detail: selectedProject?.name || 'Tu espacio de trabajo',
+              detail: selectedProject?.name || 'Your workspace',
               className: 'metric-total',
             },
             {
-              label: 'En progreso',
+              label: 'In progress',
               value: progress,
               icon: FiClock,
-              detail: 'Ideas en movimiento',
+              detail: 'Ideas in motion',
               className: 'metric-progress',
             },
             {
-              label: 'Completadas',
+              label: 'Completed',
               value: completed,
               icon: FiCheckCircle,
-              detail: `${completionRate}% del proyecto`,
+              detail: `${completionRate}% of the project`,
               className: 'metric-complete',
             },
             {
-              label: 'Fuera de plazo',
+              label: 'Overdue',
               value: overdue,
               icon: FiFlag,
-              detail: overdue ? 'Necesitan tu atención' : 'Todo bajo control',
+              detail: overdue ? 'Need your attention' : 'All under control',
               className: 'metric-overdue',
             },
           ].map(({ label, value, icon: Icon, detail, className }) => (
@@ -278,7 +278,7 @@ const Dashboard = () => {
               </div>
               <div className="metric-detail">
                 {detail}
-                {label === 'Completadas' && (
+                {label === 'Completed' && (
                   <div className="metric-track">
                     <span style={{ width: `${completionRate}%` }} />
                   </div>
@@ -288,23 +288,23 @@ const Dashboard = () => {
           ))}
         </section>
 
-        <section className="agenda-section" aria-label="Agenda de tareas">
+        <section className="agenda-section" aria-label="Task schedule">
           <div className="agenda-heading">
             <div>
               <h2>
-                Tu agenda de trabajo <span>{visibleTasks.length}</span>
+                Your work schedule <span>{visibleTasks.length}</span>
               </h2>
-              <p>Un paso a la vez, un proyecto más cerca.</p>
+              <p>One step at a time, one project closer.</p>
             </div>
             <div className="agenda-heading-actions">
               <span className="agenda-project-name">
                 <span />
-                {selectedProject?.name || 'Sin proyecto'}
+                {selectedProject?.name || 'No project'}
               </span>
               <button
                 className={`icon-button ${isFetching ? 'is-refreshing' : ''}`}
-                title="Actualizar tareas"
-                aria-label="Actualizar tareas"
+                title="Refresh tasks"
+                aria-label="Refresh tasks"
                 disabled={isFetching || !selectedProject}
                 onClick={() => refetch()}
               >
@@ -320,14 +320,14 @@ const Dashboard = () => {
               <strong aria-live="polite">{rangeLabel}</strong>
               <button
                 className="icon-button"
-                aria-label="Periodo anterior"
+                aria-label="Previous period"
                 onClick={() => shift(-1)}
               >
                 <FiChevronLeft />
               </button>
               <button
                 className="icon-button"
-                aria-label="Periodo siguiente"
+                aria-label="Next period"
                 onClick={() => shift(1)}
               >
                 <FiChevronRight />
@@ -339,23 +339,23 @@ const Dashboard = () => {
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  aria-label="Filtrar tareas por estado"
+                  aria-label="Filter tasks by status"
                 >
-                  <option value="all">Todos los estados</option>
-                  <option value="pending">Pendientes</option>
-                  <option value="in_progress">En progreso</option>
-                  <option value="completed">Completadas</option>
-                  <option value="cancelled">Canceladas</option>
-                  <option value="rejected">Rechazadas</option>
+                  <option value="all">All statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="in_progress">In progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="rejected">Rejected</option>
                 </select>
               </label>
               <button className="today-button" onClick={() => setCursor(new Date())}>
-                Hoy
+                Today
               </button>
-              <div className="view-toggle" aria-label="Vista de calendario">
+              <div className="view-toggle" aria-label="Calendar view">
                 {[
-                  ['week', 'Semana'],
-                  ['month', 'Mes'],
+                  ['week', 'Week'],
+                  ['month', 'Month'],
                 ].map(([id, label]) => (
                   <button
                     key={id}
@@ -381,27 +381,27 @@ const Dashboard = () => {
                   </div>
                 ))}
               </div>
-              <p>Organizando tu espacio de trabajo…</p>
+              <p>Setting up your workspace…</p>
             </div>
           ) : error || projectsError ? (
             <div className="agenda-empty" role="alert">
               <FiRefreshCw />
-              <h3>No pudimos cargar tu espacio</h3>
-              <p>Tu información sigue a salvo. Intenta actualizar de nuevo.</p>
+              <h3>We could not load your workspace</h3>
+              <p>Your information is safe. Try refreshing again.</p>
               <button
                 className="secondary-button"
                 onClick={() => (projectsError ? refreshProjects() : refetch())}
               >
-                Reintentar
+                Try again
               </button>
             </div>
           ) : !selectedProject ? (
             <div className="agenda-empty">
               <FiFolder />
-              <h3>Todo empieza con un proyecto</h3>
-              <p>Crea o selecciona un proyecto para organizar tus próximas tareas.</p>
+              <h3>It all starts with a project</h3>
+              <p>Create or select a project to organize your upcoming tasks.</p>
               <button className="primary-button" onClick={() => navigate('/admin/projects')}>
-                Explorar proyectos <FiArrowUpRight />
+                Explore projects <FiArrowUpRight />
               </button>
             </div>
           ) : (
@@ -409,7 +409,7 @@ const Dashboard = () => {
               <div className="calendar-scroll">
                 <div className={`agenda-calendar ${view === 'month' ? 'month-view' : ''}`}>
                   {view === 'month' &&
-                    ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day) => (
+                    ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
                       <div className="month-weekday" key={day}>
                         {day}
                       </div>
@@ -428,15 +428,15 @@ const Dashboard = () => {
                       >
                         <div className="calendar-day-header">
                           <span>
-                            {day.toLocaleDateString('es-MX', { weekday: 'short' }).replace('.', '')}
+                            {day.toLocaleDateString('en-US', { weekday: 'short' }).replace('.', '')}
                           </span>
                           <strong>
                             {String(day.getDate()).padStart(2, '0')}
                             <small>
                               {isToday
-                                ? 'HOY'
+                                ? 'TODAY'
                                 : day
-                                    .toLocaleDateString('es-MX', { month: 'short' })
+                                    .toLocaleDateString('en-US', { month: 'short' })
                                     .replace('.', '')}
                             </small>
                           </strong>
@@ -454,7 +454,7 @@ const Dashboard = () => {
                           {!dayTasks.length && (
                             <div className="day-empty">
                               <span />
-                              {view === 'week' && <small>Sin entregas</small>}
+                              {view === 'week' && <small>No deadlines</small>}
                             </div>
                           )}
                         </div>
@@ -467,33 +467,33 @@ const Dashboard = () => {
                 <div className="calendar-legend">
                   <span>
                     <i className="legend-pending" />
-                    Pendiente
+                    Pending
                   </span>
                   <span>
                     <i className="legend-progress" />
-                    En progreso
+                    In progress
                   </span>
                   <span>
                     <i className="legend-priority" />
-                    Alta prioridad
+                    High priority
                   </span>
                   <span>
                     <i className="legend-complete" />
-                    Completada
+                    Completed
                   </span>
                 </div>
-                <span>Las tareas se muestran por fecha de entrega</span>
+                <span>Tasks are shown by due date</span>
               </div>
               {visibleTasks.length === 0 && (
                 <div className="week-empty-note">
                   <FiCalendar size={15} />
                   <span>
                     {tasks.length
-                      ? 'No hay entregas para este periodo y filtro.'
-                      : 'Tu agenda está lista. Agrega la primera tarea desde Mis tareas.'}
+                      ? 'No deadlines match this period and filter.'
+                      : 'Your schedule is ready. Add your first task from My tasks.'}
                   </span>
                   <button onClick={openTasks}>
-                    Ver tareas <FiArrowRight />
+                    View tasks <FiArrowRight />
                   </button>
                 </div>
               )}
@@ -501,7 +501,7 @@ const Dashboard = () => {
                 <section className="unscheduled-section">
                   <h3>
                     <FiClock size={15} />
-                    Sin fecha de entrega <span>{unscheduled.length}</span>
+                    No due date <span>{unscheduled.length}</span>
                   </h3>
                   <div>
                     {unscheduled.map((task) => (
@@ -519,8 +519,7 @@ const Dashboard = () => {
         </section>
         <footer className="dashboard-footer">
           <span>
-            <span className="footer-spark">✳</span> Un espacio para enfocarte. Un equipo para llegar
-            más lejos.
+            <span className="footer-spark">✳</span> A space to focus. A team to go further.
           </span>
           <strong>
             NexLang <span>Workspace</span>

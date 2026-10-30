@@ -58,9 +58,12 @@ test('week navigation crosses year boundaries without mutating its input', () =>
   assert.equal(dateKey(date), '2026-12-28');
 });
 
-test('task states are displayed in Spanish with safe fallbacks', () => {
-  assert.equal(taskStatusLabel('in_progress'), 'En progreso');
-  assert.equal(taskStatusLabel('completed'), 'Completada');
+test('task states are displayed in English with safe fallbacks', () => {
+  assert.equal(taskStatusLabel('pending'), 'Pending');
+  assert.equal(taskStatusLabel('in_progress'), 'In progress');
+  assert.equal(taskStatusLabel('cancelled'), 'Cancelled');
+  assert.equal(taskStatusLabel('rejected'), 'Rejected');
+  assert.equal(taskStatusLabel('completed'), 'Completed');
   assert.equal(taskStatusLabel('custom'), 'custom');
-  assert.equal(taskStatusLabel(null), 'Pendiente');
+  assert.equal(taskStatusLabel(null), 'Pending');
 });

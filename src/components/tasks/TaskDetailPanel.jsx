@@ -474,7 +474,7 @@ const TaskDetailPanel = ({ task, projectId, onClose, onUpdate, users = [] }) => 
                     <div>
                       <p className="text-sm font-medium text-slate-900">{attachment.original_filename}</p>
                       <p className="text-xs text-slate-500">
-                        {formatFileSize(attachment.file_size)} • {new Date(attachment.created_at).toLocaleDateString()}
+                        {formatFileSize(attachment.file_size)} • {new Date(attachment.created_at).toLocaleDateString('en-US')}
                       </p>
                     </div>
                   </div>
@@ -606,7 +606,7 @@ const TaskDetailPanel = ({ task, projectId, onClose, onUpdate, users = [] }) => 
                       />
                       <span className="text-sm font-medium text-slate-900">{comment.user.name || 'Unknown'}</span>
                       <span className="text-xs text-slate-500">
-                        {new Date(comment.created_at).toLocaleString()}
+                        {new Date(comment.created_at).toLocaleString('en-US')}
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
