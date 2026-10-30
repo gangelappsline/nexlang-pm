@@ -111,7 +111,7 @@ const ProjectRow = ({ project, onEdit, onDelete, onSelect }) => {
   const tasksCount = project.tasks_count || 0;
   const completedCount = project.completed_tasks_count || 0;
   const progress = calculateProgress(project);
-  const dueDate = project.dueDate ? new Date(project.dueDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+  const dueDate = project.dueDate ? new Date(project.dueDate).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
   
   return (
     <tr
@@ -144,7 +144,7 @@ const ProjectRow = ({ project, onEdit, onDelete, onSelect }) => {
             <span className="text-sm text-slate-400">/</span>
             <span className="text-sm font-semibold text-slate-900">{tasksCount}</span>
           </div>
-          <span className="text-[10px] text-slate-400 mt-0.5">tareas</span>
+          <span className="text-[10px] text-slate-400 mt-0.5">tasks</span>
         </div>
       </td>
       
@@ -182,9 +182,9 @@ const ProjectRow = ({ project, onEdit, onDelete, onSelect }) => {
       <td className="px-4 py-3 text-right">
         <div className="flex flex-col items-end">
           <span className="text-sm font-semibold text-slate-900">
-            {project.wordCount?.toLocaleString() || '0'}
+            {project.wordCount?.toLocaleString('en-US') || '0'}
           </span>
-          <span className="text-[10px] text-slate-400">palabras</span>
+          <span className="text-[10px] text-slate-400">words</span>
         </div>
       </td>
       
@@ -192,7 +192,7 @@ const ProjectRow = ({ project, onEdit, onDelete, onSelect }) => {
       <td className="px-4 py-3 text-center">
         <div className="flex flex-col items-center">
           <span className="text-xs font-semibold text-slate-900">{dueDate}</span>
-          <span className="text-[10px] text-slate-400">vencimiento</span>
+          <span className="text-[10px] text-slate-400">due date</span>
         </div>
       </td>
       
@@ -205,14 +205,14 @@ const ProjectRow = ({ project, onEdit, onDelete, onSelect }) => {
           <button
             onClick={() => onEdit(project)}
             className="rounded p-1.5 text-slate-500 hover:bg-blue-100 hover:text-blue-600"
-            title="Editar proyecto"
+            title="Edit project"
           >
             <FiEdit2 size={14} />
           </button>
           <button
             onClick={() => onDelete(project.id)}
             className="rounded p-1.5 text-slate-500 hover:bg-red-100 hover:text-red-600"
-            title="Eliminar proyecto"
+            title="Delete project"
           >
             <FiTrash2 size={14} />
           </button>
@@ -229,7 +229,7 @@ const TableHeader = () => (
         <input type="checkbox" className="h-4 w-4 rounded border-slate-300 accent-blue-600" />
       </th>
       <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-600">
-        Proyecto
+        Project
       </th>
       <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wide text-slate-600">
         Tasks
@@ -329,7 +329,7 @@ const Admin = () => {
       setProjectError(null);
     } catch (err) {
       console.error('Error creating project:', err);
-      setProjectError(err.message || 'Error al crear el proyecto');
+      setProjectError(err.message || 'Failed to create project');
     }
   };
   
@@ -342,20 +342,20 @@ const Admin = () => {
       setProjectError(null);
     } catch (err) {
       console.error('Error updating project:', err);
-      setProjectError(err.message || 'Error al actualizar el proyecto');
+      setProjectError(err.message || 'Failed to update project');
     }
   };
   
   const handleDeleteProject = async (id) => {
     const result = await Swal.fire({
-      title: 'Eliminar Proyecto',
-      text: '¿Estás seguro de que deseas eliminar este proyecto? Esta acción no se puede deshacer.',
+      title: 'Delete Project',
+      text: 'Are you sure you want to delete this project? This action cannot be undone.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
+      confirmButtonText: 'Yes, delete',
+      cancelButtonText: 'Cancel'
     });
 
     if (!result.isConfirmed) return;
@@ -366,8 +366,8 @@ const Admin = () => {
       if (selectedProjectForView?.id === id) setSelectedProjectForView(null);
       
       await Swal.fire({
-        title: 'Eliminado',
-        text: 'El proyecto ha sido eliminado exitosamente',
+        title: 'Deleted',
+        text: 'The project has been deleted successfully',
         icon: 'success',
         timer: 2000,
         showConfirmButton: false
@@ -376,7 +376,7 @@ const Admin = () => {
       console.error('Error deleting project:', err);
       await Swal.fire({
         title: 'Error',
-        text: 'Error al eliminar el proyecto: ' + (err.message || 'Error desconocido'),
+        text: 'Failed to delete project: ' + (err.message || 'Unknown error'),
         icon: 'error',
         confirmButtonColor: '#3b82f6'
       });
@@ -515,7 +515,7 @@ const Admin = () => {
         <div className="flex flex-1 items-center justify-center">
           <div className="text-center">
             <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
-            <p className="text-sm text-slate-600">Cargando proyectos...</p>
+            <p className="text-sm text-slate-600">Loading projects...</p>
           </div>
         </div>
       </AdminLayout>
@@ -534,20 +534,20 @@ const Admin = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h3 className="mb-2 text-lg font-semibold text-slate-900">Error al cargar proyectos</h3>
+            <h3 className="mb-2 text-lg font-semibold text-slate-900">Failed to load projects</h3>
             <p className="mb-6 text-sm text-slate-600">{projectsError}</p>
             <div className="flex gap-3 justify-center">
               <button 
                 onClick={() => window.location.reload()} 
                 className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
               >
-                Reintentar
+                Try again
               </button>
               <button 
                 onClick={() => { setEditingProject(null); setShowProjectModal(true); }} 
                 className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
               >
-                Crear Proyecto
+                Create Project
               </button>
             </div>
           </div>
@@ -573,14 +573,14 @@ const Admin = () => {
         <div className="flex flex-1 items-center justify-center">
           <div className="text-center">
             <FiFolder className="mx-auto mb-4 h-16 w-16 text-slate-300" />
-            <h3 className="mb-2 text-lg font-semibold text-slate-900">No hay proyectos</h3>
-            <p className="mb-4 text-sm text-slate-600">Crea tu primer proyecto para comenzar</p>
+            <h3 className="mb-2 text-lg font-semibold text-slate-900">No projects yet</h3>
+            <p className="mb-4 text-sm text-slate-600">Create your first project to get started</p>
             <button 
               onClick={() => { setEditingProject(null); setShowProjectModal(true); }} 
               className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 mx-auto"
             >
               <FiPlus size={16} />
-              Crear Proyecto
+              Create Project
             </button>
           </div>
         </div>
@@ -665,7 +665,7 @@ const Admin = () => {
                               {collapsedGroups[dept] ? <FiChevronDown size={16} /> : <FiChevronUp size={16} />}
                               <span>{dept}</span>
                               <span className="ml-2 rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-600">
-                                {deptProjects.length} {deptProjects.length === 1 ? 'Proyecto' : 'Proyectos'}
+                                {deptProjects.length} {deptProjects.length === 1 ? 'Project' : 'Projects'}
                               </span>
                             </button>
                           </td>
@@ -687,12 +687,12 @@ const Admin = () => {
                         <td colSpan="11" className="px-4 py-20 text-center">
                           <div className="flex flex-col items-center justify-center text-slate-400">
                             <FiFolder className="mb-3 h-12 w-12" />
-                            <p className="text-sm mb-2">No hay proyectos</p>
+                            <p className="text-sm mb-2">No projects yet</p>
                             <button
                               onClick={() => { setEditingProject(null); setShowProjectModal(true); }}
                               className="text-sm font-semibold text-blue-600 hover:underline"
                             >
-                              + Crear proyecto
+                              + Create project
                             </button>
                           </div>
                         </td>
@@ -709,7 +709,7 @@ const Admin = () => {
                 <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <button onClick={() => setSelectedProjectForView(null)} className="text-sm text-blue-600 hover:underline">
-                      â† Volver
+                      ← Back
                     </button>
                     <span className="text-slate-300">|</span>
                     <h2 className="text-lg font-bold text-slate-900">{selectedProjectForView.name}</h2>
@@ -719,7 +719,7 @@ const Admin = () => {
                     className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
                   >
                     <FiPlus size={16} />
-                    Nueva Tarea
+                    New Task
                   </button>
                 </div>
 
@@ -727,10 +727,10 @@ const Admin = () => {
                 <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
                   <div className="grid border-b border-slate-200 bg-slate-50 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide text-slate-400"
                     style={{ gridTemplateColumns: '1fr 120px 80px 140px 56px' }}>
-                    <span>Tarea</span><span>Asignado</span><span>Prioridad</span><span>Estado</span><span />
+                    <span>Task</span><span>Assignee</span><span>Priority</span><span>Status</span><span />
                   </div>
                   {projectTasks.length === 0 ? (
-                    <div className="py-10 text-center text-sm text-slate-400">Sin tareas aÃºn</div>
+                    <div className="py-10 text-center text-sm text-slate-400">No tasks yet</div>
                   ) : projectTasks.map((task) => (
                     <div key={task.id} className="group grid items-center border-b border-slate-100 px-4 py-3 hover:bg-slate-50"
                       style={{ gridTemplateColumns: '1fr 120px 80px 140px 56px' }}>
@@ -748,9 +748,9 @@ const Admin = () => {
                         className={`w-fit cursor-pointer rounded-full px-2.5 py-0.5 text-xs font-semibold outline-none ${getStatusColor(task.status)}`}
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <option value="todo">Por hacer</option>
-                        <option value="in_progress">En Progreso</option>
-                        <option value="done">Completado</option>
+                        <option value="todo">To do</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="done">Completed</option>
                       </select>
                       <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100">
                         <button onClick={() => { setEditingTask(task); setShowTaskModal(true); }} className="rounded p-1 text-slate-500 hover:bg-blue-100 hover:text-blue-600"><FiEdit2 size={13} /></button>
@@ -767,9 +767,9 @@ const Admin = () => {
                 {selectedProjectForView ? (
                   <>
                     <div className="mb-4 flex items-center justify-between">
-                      <button onClick={() => setSelectedProjectForView(null)} className="text-sm text-blue-600 hover:underline">â† Volver</button>
+                      <button onClick={() => setSelectedProjectForView(null)} className="text-sm text-blue-600 hover:underline">← Back</button>
                       <button onClick={() => { setEditingTask(null); setShowTaskModal(true); }} className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
-                        <FiPlus size={16} />Nueva Tarea
+                        <FiPlus size={16} />New Task
                       </button>
                     </div>
                     <TaskBoardView tasks={projectTasks} onEdit={(t) => { setEditingTask(t); setShowTaskModal(true); }} onDelete={handleDeleteTask} onStatusChange={handleStatusChange} getStatusColor={getStatusColor} getPriorityColor={getPriorityColor} />
@@ -792,7 +792,7 @@ const Admin = () => {
               <div className="p-6">
                 {selectedProjectForView ? (
                   <>
-                    <button onClick={() => setSelectedProjectForView(null)} className="mb-4 text-sm text-blue-600 hover:underline">â† Volver</button>
+                    <button onClick={() => setSelectedProjectForView(null)} className="mb-4 text-sm text-blue-600 hover:underline">← Back</button>
                     <TaskTimelineView tasks={projectTasks} onEdit={(t) => { setEditingTask(t); setShowTaskModal(true); }} onDelete={handleDeleteTask} getStatusColor={getStatusColor} getPriorityColor={getPriorityColor} />
                   </>
                 ) : (
@@ -839,7 +839,7 @@ const GanttView = ({ projects, onSelect }) => {
   const start = new Date('2024-01-01');
   const end   = new Date('2024-06-01');
   const totalDays = (end - start) / 86400000;
-  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 
   const pct = (date) => Math.max(0, Math.min(100, ((new Date(date) - start) / (end - start)) * 100));
   const todayPct = ((today - start) / (end - start)) * 100;

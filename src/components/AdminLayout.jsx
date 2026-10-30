@@ -37,18 +37,18 @@ const AdminLayout = ({ children }) => {
         {mobileOpen && (
           <button
             className="sidebar-backdrop"
-            aria-label="Cerrar navegación"
+            aria-label="Close navigation"
             onClick={() => setMobileOpen(false)}
           />
         )}
         <aside
           className={`workspace-sidebar ${mobileOpen ? 'is-open' : ''}`}
-          aria-label="Navegación principal"
+          aria-label="Main navigation"
         >
           <NavLink
             to="/admin/dashboard"
             className="workspace-brand"
-            aria-label="NexLang, inicio"
+            aria-label="NexLang, home"
             onClick={() => setMobileOpen(false)}
           >
             <span className="brand-mark">
@@ -62,7 +62,7 @@ const AdminLayout = ({ children }) => {
           <button
             className="sidebar-collapse"
             onClick={() => setCollapsed(!collapsed)}
-            aria-label={collapsed ? 'Expandir barra lateral' : 'Contraer barra lateral'}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             aria-expanded={!collapsed}
           >
             <FiChevronLeft />
@@ -70,7 +70,7 @@ const AdminLayout = ({ children }) => {
           <button
             className="sidebar-close"
             onClick={() => setMobileOpen(false)}
-            aria-label="Cerrar navegación"
+            aria-label="Close navigation"
           >
             <FiX />
           </button>
@@ -78,9 +78,9 @@ const AdminLayout = ({ children }) => {
           <nav className="workspace-nav">
             {[
               { to: '/admin/dashboard', icon: FiGrid, label: 'Dashboard' },
-              { to: '/admin/projects', icon: FiFolder, label: 'Proyectos', end: true },
-              { to: taskPath, icon: FiCheckSquare, label: 'Mis tareas' },
-              { to: '/admin/resources', icon: FiHardDrive, label: 'Recursos' },
+              { to: '/admin/projects', icon: FiFolder, label: 'Projects', end: true },
+              { to: taskPath, icon: FiCheckSquare, label: 'My tasks' },
+              { to: '/admin/resources', icon: FiHardDrive, label: 'Resources' },
             ].map(({ to, icon: Icon, label, end }) => (
               <NavLink
                 key={label}
@@ -92,33 +92,33 @@ const AdminLayout = ({ children }) => {
               >
                 {createElement(Icon, { size: 19 })}
                 <span className="sidebar-label">{label}</span>
-                {label === 'Proyectos' && (
+                {label === 'Projects' && (
                   <span className="nav-count sidebar-label">{projects.length}</span>
                 )}
               </NavLink>
             ))}
           </nav>
           <div className="sidebar-project sidebar-label">
-            <div className="sidebar-section-label">EN TU ESPACIO</div>
+            <div className="sidebar-section-label">IN YOUR WORKSPACE</div>
             <span className="project-orbit">
               {selectedProject?.name?.slice(0, 2).toUpperCase() || 'NX'}
             </span>
-            <p>{selectedProject?.name || 'Tu próximo gran proyecto'}</p>
-            <span>Las grandes ideas empiezan aquí.</span>
+            <p>{selectedProject?.name || 'Your next great project'}</p>
+            <span>Great ideas start here.</span>
             <NavLink to="/admin/projects">
-              Explorar proyectos <FiArrowUpRight />
+              Explore projects <FiArrowUpRight />
             </NavLink>
           </div>
           <div className="sidebar-bottom">
             <div className="workspace-status sidebar-label">
-              <span /> Tu espacio de trabajo
+              <span /> Your workspace
             </div>
-            <button onClick={logout} title="Cerrar sesión">
+            <button onClick={logout} title="Sign out">
               <FiLogOut size={18} />
-              <span className="sidebar-label">Cerrar sesión</span>
+              <span className="sidebar-label">Sign out</span>
             </button>
             <p className="sidebar-label">
-              NexLang PM <span>·</span> Hecho para avanzar
+              NexLang PM <span>·</span> Built for progress
             </p>
           </div>
         </aside>

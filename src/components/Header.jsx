@@ -79,7 +79,7 @@ const Header = ({ activeNav = 'Projects', onNewProject }) => {
         <button
           className="mobile-menu icon-button"
           onClick={navigation?.openNavigation}
-          aria-label="Abrir navegación"
+          aria-label="Open navigation"
         >
           <FiMenu size={20} />
         </button>
@@ -96,32 +96,32 @@ const Header = ({ activeNav = 'Projects', onNewProject }) => {
                 setDropdown('search');
               }}
               onFocus={() => setDropdown('search')}
-              placeholder="Buscar un proyecto..."
-              aria-label="Buscar proyectos"
+              placeholder="Search for a project..."
+              aria-label="Search projects"
               aria-expanded={dropdown === 'search'}
               aria-controls="project-search-results"
             />
             <kbd>⌘ K</kbd>
             <span className="search-scope">
-              En: <b>Proyectos</b>
+              In: <b>Projects</b>
             </span>
           </label>
           {dropdown === 'search' && (
             <div className="header-popover search-results" id="project-search-results">
-              <div className="popover-label">PROYECTOS · {filteredProjects.length}</div>
+              <div className="popover-label">PROJECTS · {filteredProjects.length}</div>
               {filteredProjects.length ? (
                 filteredProjects.map((project) => (
                   <button key={project.id} onClick={() => openProject(project)}>
                     <FiFolder />
                     <span>
                       {project.name}
-                      <small>{project.code || 'Abrir tareas del proyecto'}</small>
+                      <small>{project.code || 'Open project tasks'}</small>
                     </span>
                     <FiArrowUpRight />
                   </button>
                 ))
               ) : (
-                <p className="popover-empty">No se encontraron proyectos.</p>
+                <p className="popover-empty">No projects found.</p>
               )}
             </div>
           )}
@@ -134,12 +134,12 @@ const Header = ({ activeNav = 'Projects', onNewProject }) => {
               aria-expanded={dropdown === 'projects'}
             >
               <span className="project-switcher-dot" />
-              <span>{selectedProject?.name || 'Seleccionar proyecto'}</span>
+              <span>{selectedProject?.name || 'Select project'}</span>
               <FiChevronDown size={13} />
             </button>
             {dropdown === 'projects' && (
               <div className="header-popover project-options">
-                <div className="popover-label">CAMBIAR PROYECTO</div>
+                <div className="popover-label">SWITCH PROJECT</div>
                 {onNewProject && (
                   <button
                     onClick={() => {
@@ -148,7 +148,7 @@ const Header = ({ activeNav = 'Projects', onNewProject }) => {
                     }}
                   >
                     <FiPlus />
-                    <span>Nuevo proyecto</span>
+                    <span>New project</span>
                   </button>
                 )}
                 {projects.map((project) => (
@@ -172,7 +172,7 @@ const Header = ({ activeNav = 'Projects', onNewProject }) => {
                     }}
                   >
                     <FiPlus />
-                    <span>Crear tu primer proyecto</span>
+                    <span>Create your first project</span>
                   </button>
                 )}
               </div>
@@ -183,7 +183,7 @@ const Header = ({ activeNav = 'Projects', onNewProject }) => {
             <button
               className="profile-trigger"
               onClick={() => setDropdown(dropdown === 'user' ? null : 'user')}
-              aria-label="Menú de usuario"
+              aria-label="User menu"
               aria-expanded={dropdown === 'user'}
             >
               {user?.photo ? <img src={user.photo} alt="" /> : <span>{initials}</span>}
@@ -191,7 +191,7 @@ const Header = ({ activeNav = 'Projects', onNewProject }) => {
             {dropdown === 'user' && (
               <div className="header-popover user-options">
                 <div className="user-summary">
-                  <strong>{user?.name || 'Mi cuenta'}</strong>
+                  <strong>{user?.name || 'My account'}</strong>
                   <small>{user?.email}</small>
                   <span>{activeNav === 'Dashboard' ? 'Dashboard' : 'Workspace'} · NexLang PM</span>
                 </div>
@@ -202,11 +202,11 @@ const Header = ({ activeNav = 'Projects', onNewProject }) => {
                   }}
                 >
                   <FiUser />
-                  <span>Mi perfil</span>
+                  <span>My profile</span>
                 </button>
                 <button onClick={logout}>
                   <FiLogOut />
-                  <span>Cerrar sesión</span>
+                  <span>Sign out</span>
                 </button>
               </div>
             )}

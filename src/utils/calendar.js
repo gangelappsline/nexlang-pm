@@ -32,11 +32,11 @@ export const calendarDays = (date, view) => {
 
 export const taskStatusLabel = (status) =>
   ({
-    pending: 'Pendiente',
-    in_progress: 'En progreso',
-    completed: 'Completada',
-    cancelled: 'Cancelada',
-    rejected: 'Rechazada',
+    pending: 'Pending',
+    in_progress: 'In progress',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+    rejected: 'Rejected',
   })[status] ||
   status ||
-  'Pendiente';
+  'Pending';

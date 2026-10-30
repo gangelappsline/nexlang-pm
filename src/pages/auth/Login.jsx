@@ -65,7 +65,7 @@ const LoginPage = () => {
           const user = await fetchCurrentUser(data.data.access_token);
           setAuthUser(user);
         } catch (fetchError) {
-          console.error("No se pudo cargar el usuario.", fetchError);
+          console.error("Could not load the user.", fetchError);
           setAuthUser({ email, id: "unknown" });
         }
       }
@@ -80,14 +80,14 @@ const LoginPage = () => {
     },
     onError: (error) => {
       console.error("Login error:", error);
-      setLoginError("No pudimos iniciar sesion. Verifica tus credenciales.");
+      setLoginError("We could not sign you in. Please check your credentials.");
     },
   });
 
   const handleLogin = (event) => {
     event.preventDefault();
     if (!email || !password) {
-      setLoginError("Por favor completa todos los campos.");
+      setLoginError("Please complete all fields.");
       return;
     }
     submitLogin({ email, password });

@@ -62,16 +62,16 @@ const ProjectModal = ({ project, onSubmit, onClose, isLoading = false, error = n
         <button onClick={onClose} className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 z-10">
           <FiX size={20} />
         </button>
-        <h2 className="mb-5 text-xl font-bold text-slate-900">{project ? 'Editar Proyecto' : 'Nuevo Proyecto'}</h2>
+        <h2 className="mb-5 text-xl font-bold text-slate-900">{project ? 'Edit Project' : 'New Project'}</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Información Básica */}
+          {/* Basic Information */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-slate-700 border-b pb-2">Información Básica</h3>
+            <h3 className="text-sm font-semibold text-slate-700 border-b pb-2">Basic Information</h3>
             
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Nombre del Proyecto *
+                Project Name *
               </label>
               <input 
                 type="text" 
@@ -80,13 +80,13 @@ const ProjectModal = ({ project, onSubmit, onClose, isLoading = false, error = n
                 onChange={handleChange} 
                 required
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
-                placeholder="Ej: Sistema de Traducción v2" 
+                placeholder="e.g. Translation System v2"
               />
             </div>
 
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Código/Key *
+                Code/Key *
               </label>
               <input 
                 type="text" 
@@ -95,13 +95,13 @@ const ProjectModal = ({ project, onSubmit, onClose, isLoading = false, error = n
                 onChange={handleChange} 
                 required
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
-                placeholder="Ej: TRAD-002" 
+                placeholder="e.g. TRAD-002"
               />
             </div>
 
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Descripción
+                Description
               </label>
               <textarea 
                 name="description" 
@@ -109,16 +109,16 @@ const ProjectModal = ({ project, onSubmit, onClose, isLoading = false, error = n
                 onChange={handleChange}
                 rows="3"
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500 resize-none"
-                placeholder="Descripción del proyecto..."
+                placeholder="Project description..."
               />
             </div>
           </div>
 
-          {/* Estado y Prioridad */}
+          {/* Status and Priority */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Estado *
+                Status *
               </label>
               <select 
                 name="status" 
@@ -126,16 +126,16 @@ const ProjectModal = ({ project, onSubmit, onClose, isLoading = false, error = n
                 onChange={handleChange}
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
               >
-                <option value="planning">Planeación</option>
-                <option value="in_progress">En Progreso</option>
-                <option value="on_hold">En Espera</option>
-                <option value="completed">Completado</option>
+                <option value="planning">Planning</option>
+                <option value="in_progress">In Progress</option>
+                <option value="on_hold">On Hold</option>
+                <option value="completed">Completed</option>
               </select>
             </div>
             
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Prioridad *
+                Priority *
               </label>
               <select 
                 name="priority" 
@@ -143,21 +143,21 @@ const ProjectModal = ({ project, onSubmit, onClose, isLoading = false, error = n
                 onChange={handleChange}
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
               >
-                <option value="low">Baja</option>
-                <option value="medium">Media</option>
-                <option value="high">Alta</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
               </select>
             </div>
           </div>
 
-          {/* Fechas */}
+          {/* Dates */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-slate-700 border-b pb-2">Fechas</h3>
+            <h3 className="text-sm font-semibold text-slate-700 border-b pb-2">Dates</h3>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Fecha de Inicio
+                  Start Date
                 </label>
                 <input 
                   type="date" 
@@ -170,7 +170,7 @@ const ProjectModal = ({ project, onSubmit, onClose, isLoading = false, error = n
               
               <div>
                 <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Fecha Límite *
+                  Due Date *
                 </label>
                 <input 
                   type="date" 
@@ -184,14 +184,14 @@ const ProjectModal = ({ project, onSubmit, onClose, isLoading = false, error = n
             </div>
           </div>
 
-          {/* Presupuesto y Recursos */}
+          {/* Budget and Resources */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-slate-700 border-b pb-2">Presupuesto y Recursos</h3>
+            <h3 className="text-sm font-semibold text-slate-700 border-b pb-2">Budget and Resources</h3>
             
             <div className="grid grid-cols-3 gap-4">
               <div className="col-span-2">
                 <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Presupuesto
+                  Budget
                 </label>
                 <input 
                   type="number" 
@@ -207,7 +207,7 @@ const ProjectModal = ({ project, onSubmit, onClose, isLoading = false, error = n
               
               <div>
                 <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Moneda
+                  Currency
                 </label>
                 <select 
                   name="budget_currency" 
@@ -225,7 +225,7 @@ const ProjectModal = ({ project, onSubmit, onClose, isLoading = false, error = n
 
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Horas Estimadas
+                Estimated Hours
               </label>
               <input 
                 type="number" 
@@ -249,17 +249,17 @@ const ProjectModal = ({ project, onSubmit, onClose, isLoading = false, error = n
           <div className="flex gap-3 pt-4">
             <button type="button" onClick={onClose} disabled={isLoading}
               className="flex-1 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
-              Cancelar
+              Cancel
             </button>
             <button type="submit" disabled={isLoading}
               className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
               {isLoading ? (
                 <>
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                  <span>Guardando...</span>
+                  <span>Saving...</span>
                 </>
               ) : (
-                project ? 'Actualizar' : 'Crear'
+                project ? 'Update' : 'Create'
               )}
             </button>
           </div>
